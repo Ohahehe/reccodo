@@ -1,209 +1,120 @@
-<!DOCTYPE html>
-<html lang="zh">
+<!doctype html>
+<html lang="zh-CN">
 <head>
- <meta charset="UTF-8">
- <title>WebGL 手势控制爱心粒子</title>
- <style>
-     body { margin: 0; overflow: hidden; background-color: #000; }
-     #canvas-container { width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; z-index: 1; }
-     /* 隐藏摄像头视频流，只用于后台分析 */
-     .input_video { display: none; }
-     #loading {
-         position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-         color: white; font-family: sans-serif; font-size: 24px; pointer-events: none; z-index: 10;
-     }
- </style>
- <!-- 引入 Three.js -->
- <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
- <!-- 引入 MediaPipe Hands -->
- <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
- <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
- <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
- <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="个人学术主页" />
+  <title>你的名字 · 个人主页</title>
+  <style>
+    :root { --bg:#f8fafc; --card:#fff; --text:#263240; --muted:#5d6d80; --line:#dce5ef; --blue:#175ea8; --chip:#f4f7fb; --shadow:0 8px 24px rgba(42,62,84,.05); }
+    [data-theme="dark"] { --bg:#101722; --card:#17212f; --text:#edf4fc; --muted:#aab8c8; --line:#2b3a4d; --blue:#72b3ff; --chip:#202e3e; --shadow:0 8px 24px rgba(0,0,0,.18); }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body { margin:0; color:var(--text); background:var(--bg); font:14px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",Arial,sans-serif; }
+    a { color:var(--blue); text-decoration:none; }
+    a:hover { text-decoration:underline; }
+    .topbar { height:54px; position:sticky; top:0; z-index:10; display:flex; align-items:center; justify-content:space-between; padding:0 30px; border-bottom:1px solid var(--line); background:color-mix(in srgb,var(--card) 92%,transparent); backdrop-filter:blur(10px); }
+    .brand { font-size:16px; font-weight:700; letter-spacing:-.2px; color:var(--text); }
+    nav { display:flex; gap:25px; align-items:center; }
+    nav a { color:var(--muted); font-size:14px; white-space:nowrap; }
+    .theme { width:40px; height:40px; border:1px solid var(--line); background:var(--card); color:var(--text); border-radius:8px; cursor:pointer; font-size:18px; }
+    .layout { display:grid; grid-template-columns:278px minmax(0,1fr); gap:30px; max-width:1280px; margin:22px auto; padding:0 18px; }
+    aside { position:sticky; top:76px; height:calc(100vh - 96px); overflow:auto; padding-right:7px; scrollbar-color:#8e969e transparent; }
+    .profile { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:27px 20px; box-shadow:var(--shadow); text-align:center; }
+    .avatar { width:140px; height:140px; object-fit:cover; border-radius:50%; border:7px solid #eef3f8; box-shadow:0 0 0 1px var(--line); }
+    h1 { font-size:20px; margin:16px 0 0; line-height:1.3; }
+    .cn-name { margin:1px 0 5px; font-size:14px; }
+    .role { color:var(--muted); margin:0 0 19px; }
+    .details { text-align:left; color:var(--muted); display:grid; gap:8px; font-size:13px; }
+    .details span { display:flex; gap:9px; align-items:center; }
+    .socials { display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin:20px 0; }
+    .socials a { display:grid; place-items:center; width:34px; height:34px; color:var(--muted); border:1px solid var(--line); border-radius:50%; font-weight:700; font-size:13px; }
+    .side-block { border-top:1px solid var(--line); padding-top:20px; margin-top:20px; text-align:left; }
+    .side-title { margin:0 0 11px; font-size:12px; font-weight:700; }
+    .tags { display:flex; flex-wrap:wrap; gap:8px; }
+    .tag { padding:4px 10px; border:1px solid var(--line); border-radius:18px; color:var(--muted); background:var(--chip); font-size:12px; }
+    .recent { margin:0; padding:0; list-style:none; display:grid; gap:12px; font-size:12px; }
+    .recent time { display:block; color:var(--blue); font-weight:700; }
+    main { min-width:0; }
+    section { scroll-margin-top:72px; padding:5px 0 23px; }
+    .section-title { display:flex; align-items:center; gap:10px; margin:0 0 16px; padding-bottom:8px; border-bottom:1px solid var(--line); font-size:20px; }
+    .icon { display:inline-grid; place-items:center; width:25px; height:25px; font-size:15px; background:var(--chip); border:1px solid var(--line); border-radius:6px; }
+    .bio { font-size:15px; color:var(--text); }
+    .bio p { margin:0 0 14px; }
+    .news-box { height:258px; overflow:auto; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+    .news-item { display:grid; grid-template-columns:88px 28px minmax(340px,1fr) 24px; gap:3px; align-items:center; min-width:640px; padding:8px 2px; border-bottom:1px solid var(--line); }
+    .news-item time { color:var(--blue); font-weight:700; }
+    .news-item .out { text-align:right; color:#91a0b1; font-size:16px; }
+    .pub { display:grid; grid-template-columns:94px 1fr; gap:16px; padding:16px 0; border-bottom:1px solid var(--line); }
+    .pub-year { color:var(--blue); font-size:16px; font-weight:700; }
+    .pub h3 { margin:0 0 3px; font-size:16px; line-height:1.4; }
+    .pub p { margin:0; color:var(--muted); }
+    .badge { display:inline-block; margin:7px 6px 0 0; padding:2px 8px; border-radius:10px; background:#eaf3ff; color:var(--blue); font-size:12px; font-weight:600; }
+    footer { color:var(--muted); font-size:12px; padding:13px 0 30px; }
+    @media (max-width:850px) { .topbar { padding:0 18px; } nav { display:none; } .layout { display:block; margin-top:16px; } aside { position:static; height:auto; overflow:visible; padding:0; margin-bottom:22px; } .profile { max-width:none; } .details { max-width:350px; margin:auto; } .side-block { display:none; } .avatar { width:112px; height:112px; } }
+    @media (max-width:480px) { .layout { padding:0 12px; } .topbar { height:50px; } .bio { font-size:14px; } .section-title { font-size:18px; } .pub { grid-template-columns:1fr; gap:3px; } }
+  </style>
 </head>
 <body>
+  <header class="topbar">
+    <!-- 替换为你的姓名 -->
+    <a class="brand" href="#about">你的名字</a>
+    <nav aria-label="主导航">
+      <a href="#about">关于我</a><a href="#news">动态</a><a href="#publications">论文</a><a href="#education">教育</a><a href="#experience">经历</a><a href="#honors">荣誉</a><a href="#service">服务</a><a href="#projects">项目</a>
+    </nav>
+    <button class="theme" type="button" aria-label="切换深色模式" title="切换深色模式">◐</button>
+  </header>
 
-<div id="loading">正在加载模型与摄像头...<br>请允许摄像头权限</div>
-<div id="canvas-container"></div>
-<video class="input_video"></video>
+  <div class="layout">
+    <aside>
+      <div class="profile">
+        <!-- 将 src 换成你的头像文件，例如 assets/avatar.jpg -->
+        <img class="avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=320&q=85" alt="你的名字的头像" />
+        <h1>你的名字</h1><p class="cn-name">Your Name</p>
+        <p class="role">研究方向 / 职位 / 所在机构</p>
+        <div class="details"><span>📍 Hangzhou, China</span><span>✉️ <a href="mailto:your-email@example.com">your-email@example.com</a></span></div>
+        <div class="socials" aria-label="社交链接">
+          <a href="#" title="Email">✉</a><a href="#" title="Google Scholar">G</a><a href="#" title="LinkedIn">in</a><a href="#" title="GitHub">⌘</a><a href="#" title="知乎">知</a><a href="#" title="X">𝕏</a>
+        </div>
+        <div class="side-block"><p class="side-title">RESEARCH FOCUS</p><div class="tags"><span class="tag">Artificial Intelligence</span><span class="tag">Multimodal Learning</span><span class="tag">Computer Vision</span></div></div>
+        <div class="side-block"><p class="side-title">RECENT NEWS</p><ul class="recent"><li><time>2026.08</time>一篇论文被国际会议接收。</li><li><time>2026.06</time>发布了新的开源项目。</li></ul></div>
+      </div>
+    </aside>
 
-<script>
- // --- 1. Three.js 场景初始化 ---
- const scene = new THREE.Scene();
- const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
- camera.position.z = 30;
+    <main>
+      <section id="about"><h2 class="section-title"><span class="icon">🪪</span>关于我</h2><div class="bio">
+        <p>你好！我是<strong>你的名字</strong>，目前在<a href="#">你的机构</a>担任你的职位。欢迎来到我的个人主页。</p>
+        <p>我于 20XX 年获得<a href="#">你的学校</a>的博士学位，导师为<a href="#">导师姓名</a>。此前，我在你的学校完成了本科或硕士学习。</p>
+        <p>我的研究兴趣主要集中在<strong>人工智能、多模态学习、计算机视觉与自然语言处理</strong>。我也很乐意与有共同兴趣的朋友交流合作，欢迎通过邮件联系我。</p>
+      </div></section>
 
- const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
- renderer.setSize(window.innerWidth, window.innerHeight);
- document.getElementById('canvas-container').appendChild(renderer.domElement);
+      <section id="news"><h2 class="section-title"><span class="icon">📰</span>动态</h2><div class="news-box">
+        <div class="news-item"><time>2026.08</time><span>📑</span><span>论文 <strong>Project Name</strong> 被 EMNLP 2026 接收！</span><a class="out" href="#">↗</a></div>
+        <div class="news-item"><time>2026.07</time><span>🏅</span><span>我们的项目获得了开源社区推荐。</span><a class="out" href="#">↗</a></div>
+        <div class="news-item"><time>2026.06</time><span>🎤</span><span>在某某学术会议分享最新研究工作。</span><a class="out" href="#">↗</a></div>
+        <div class="news-item"><time>2026.05</time><span>📑</span><span>论文 <strong>Another Project</strong> 被 ICML 2026 接收！</span><a class="out" href="#">↗</a></div>
+        <div class="news-item"><time>2025.12</time><span>✈️</span><span>加入你的新团队，开启新的研究旅程。</span><a class="out" href="#">↗</a></div>
+        <div class="news-item"><time>2025.10</time><span>📑</span><span>论文被 NeurIPS 2025 接收。</span><a class="out" href="#">↗</a></div>
+      </div></section>
 
- // --- 2. 创建爱心粒子系统 ---
- const particleCount = 3000; // 粒子数量
- const geometry = new THREE.BufferGeometry();
- const positions = new Float32Array(particleCount * 3);
- const targetPositions = new Float32Array(particleCount * 3); // 存储爱心形状的目标位置
- const randomPositions = new Float32Array(particleCount * 3); // 存储散开时的随机位置
-
- // 爱心方程函数
- function getHeartPosition(t, scale = 1) {
-     const x = 16 * Math.pow(Math.sin(t), 3);
-     const y = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
-     const z = 0; 
-     return { x: x * scale, y: y * scale, z: z * scale };
- }
-
- for (let i = 0; i < particleCount; i++) {
-     // 生成爱心形状的目标点
-     // 为了让爱心立体一点，我们随机分布t，并在Z轴加一点随机扰动
-     const t = Math.random() * Math.PI * 2;
-     const scale = 0.5; 
-     const heartPos = getHeartPosition(t, scale);
-     
-     // 填充爱心内部 (随机缩放)
-     const r = Math.sqrt(Math.random()); 
-     
-     targetPositions[i * 3] = heartPos.x * r;
-     targetPositions[i * 3 + 1] = heartPos.y * r;
-     targetPositions[i * 3 + 2] = (Math.random() - 0.5) * 5; // Z轴厚度
-
-     // 生成散开的随机位置 (爆炸效果)
-     randomPositions[i * 3] = (Math.random() - 0.5) * 100;
-     randomPositions[i * 3 + 1] = (Math.random() - 0.5) * 60;
-     randomPositions[i * 3 + 2] = (Math.random() - 0.5) * 50;
-
-     // 初始位置设为散开状态
-     positions[i * 3] = randomPositions[i * 3];
-     positions[i * 3 + 1] = randomPositions[i * 3 + 1];
-     positions[i * 3 + 2] = randomPositions[i * 3 + 2];
- }
-
- geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-
- // 粒子材质
- const material = new THREE.PointsMaterial({
-     color: 0xff69b4, // 热粉色
-     size: 0.4,
-     transparent: true,
-     opacity: 0.8,
-     blending: THREE.AdditiveBlending
- });
-
- const particles = new THREE.Points(geometry, material);
- scene.add(particles);
-
- // --- 3. 交互逻辑变量 ---
- let gatherFactor = 0; // 0 = 完全散开, 1 = 完全聚合成爱心
- let targetGatherFactor = 0; // 目标聚合度，由手势控制
-
- // --- 4. MediaPipe Hands 配置 ---
- const videoElement = document.getElementsByClassName('input_video')[0];
-
- function onResults(results) {
-     document.getElementById('loading').style.display = 'none';
-
-     if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-         const landmarks = results.multiHandLandmarks[0];
-
-         // 计算手掌开合程度
-         // 简单算法：计算拇指指尖(4)与其他四指指尖(8,12,16,20)到手腕(0)的平均距离
-         const wrist = landmarks[0];
-         const fingerTips = [4, 8, 12, 16, 20];
-         let totalDist = 0;
-
-         fingerTips.forEach(idx => {
-             const tip = landmarks[idx];
-             const dist = Math.sqrt(
-                 Math.pow(tip.x - wrist.x, 2) + 
-                 Math.pow(tip.y - wrist.y, 2)
-             );
-             totalDist += dist;
-         });
-
-         const avgDist = totalDist / 5;
-
-         // 经验阈值：
-         // 握拳时，指尖距离手腕很近 (avgDist 约 0.1 - 0.2)
-         // 张开时，指尖距离手腕较远 (avgDist 约 0.4 - 0.6)
-         // 我们做一个映射：握拳(distance small) -> 聚合(factor 1), 张开 -> 散开(factor 0)
-         
-         // 动态调整这些阈值以适应摄像头的距离
-         const closeThreshold = 0.25; 
-         const openThreshold = 0.5;
-
-         let normalized = (avgDist - closeThreshold) / (openThreshold - closeThreshold);
-         normalized = 1 - Math.min(Math.max(normalized, 0), 1); // 反转：距离越小(握拳)，值越大(1)
-
-         targetGatherFactor = normalized; 
-
-     } else {
-         // 如果没有检测到手，默认缓慢散开
-         targetGatherFactor = 0;
-     }
- }
-
- const hands = new Hands({locateFile: (file) => {
-     return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
- }});
-
- hands.setOptions({
-     maxNumHands: 1,
-     modelComplexity: 1,
-     minDetectionConfidence: 0.5,
-     minTrackingConfidence: 0.5
- });
-
- hands.onResults(onResults);
-
- const cameraUtils = new Camera(videoElement, {
-     onFrame: async () => {
-         await hands.send({image: videoElement});
-     },
-     width: 640,
-     height: 480
- });
- cameraUtils.start();
-
- // --- 5. 动画循环 ---
- function animate() {
-     requestAnimationFrame(animate);
-
-     // 粒子自身旋转动画
-     particles.rotation.y += 0.002;
-
-     // 平滑过渡聚合系数 (Lerp)
-     gatherFactor += (targetGatherFactor - gatherFactor) * 0.05;
-
-     // 更新粒子位置
-     const posAttr = particles.geometry.attributes.position;
-     const currentPositions = posAttr.array;
-
-     for (let i = 0; i < particleCount; i++) {
-         const idx = i * 3;
-         
-         // 目标位置插值：从 randomPositions 过渡到 targetPositions
-         const tx = randomPositions[idx] + (targetPositions[idx] - randomPositions[idx]) * gatherFactor;
-         const ty = randomPositions[idx+1] + (targetPositions[idx+1] - randomPositions[idx+1]) * gatherFactor;
-         const tz = randomPositions[idx+2] + (targetPositions[idx+2] - randomPositions[idx+2]) * gatherFactor;
-
-         // 增加一点动态浮动效果
-         currentPositions[idx] += (tx - currentPositions[idx]) * 0.1;
-         currentPositions[idx+1] += (ty - currentPositions[idx+1]) * 0.1;
-         currentPositions[idx+2] += (tz - currentPositions[idx+2]) * 0.1;
-     }
-
-     posAttr.needsUpdate = true;
-     renderer.render(scene, camera);
- }
-
- animate();
-
- // 窗口大小调整适配
- window.addEventListener('resize', () => {
-     camera.aspect = window.innerWidth / window.innerHeight;
-     camera.updateProjectionMatrix();
-     renderer.setSize(window.innerWidth, window.innerHeight);
- });
-</script>
+      <section id="publications"><h2 class="section-title"><span class="icon">📚</span>论文发表</h2>
+        <article class="pub"><div class="pub-year">2026</div><div><h3>论文标题：你的研究成果名称</h3><p><strong>你的名字</strong>, 合作者姓名, 导师姓名. <em>Conference / Journal Name</em>, 2026.</p><a class="badge" href="#">Paper</a><a class="badge" href="#">Code</a><a class="badge" href="#">Project</a></div></article>
+        <article class="pub"><div class="pub-year">2025</div><div><h3>另一篇论文的标题</h3><p>作者姓名. <em>Conference / Journal Name</em>, 2025.</p><a class="badge" href="#">Paper</a><a class="badge" href="#">Code</a></div></article>
+      </section>
+      <section id="education"><h2 class="section-title"><span class="icon">🎓</span>教育经历</h2><div class="bio"><p><strong>20XX – 20XX</strong>　博士，学校名称，专业名称</p><p><strong>20XX – 20XX</strong>　本科/硕士，学校名称，专业名称</p></div></section>
+      <section id="experience"><h2 class="section-title"><span class="icon">💼</span>工作经历</h2><div class="bio"><p><strong>20XX – 至今</strong>　职位名称，机构名称</p></div></section>
+      <section id="honors"><h2 class="section-title"><span class="icon">🏆</span>荣誉奖项</h2><div class="bio"><p>20XX　奖项名称</p></div></section>
+      <section id="service"><h2 class="section-title"><span class="icon">🤝</span>学术服务</h2><div class="bio"><p>期刊/会议审稿人、社区服务等。</p></div></section>
+      <section id="projects"><h2 class="section-title"><span class="icon">🚀</span>项目</h2><div class="bio"><p><a href="#">项目名称</a>：用一句话介绍这个项目的目标与亮点。</p></div></section>
+      <footer>© <span id="year"></span> 你的名字 · Built with GitHub Pages</footer>
+    </main>
+  </div>
+  <script>
+    const button = document.querySelector('.theme');
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') document.documentElement.dataset.theme = 'dark';
+    button.addEventListener('click', () => { const dark = document.documentElement.dataset.theme !== 'dark'; document.documentElement.dataset.theme = dark ? 'dark' : ''; localStorage.setItem('theme', dark ? 'dark' : 'light'); });
+    document.querySelector('#year').textContent = new Date().getFullYear();
+  </script>
 </body>
 </html>
-
