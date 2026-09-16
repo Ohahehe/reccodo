@@ -1,120 +1,112 @@
-<!doctype html>
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="个人学术主页" />
-  <title>你的名字 · 个人主页</title>
-  <style>
-    :root { --bg:#f8fafc; --card:#fff; --text:#263240; --muted:#5d6d80; --line:#dce5ef; --blue:#175ea8; --chip:#f4f7fb; --shadow:0 8px 24px rgba(42,62,84,.05); }
-    [data-theme="dark"] { --bg:#101722; --card:#17212f; --text:#edf4fc; --muted:#aab8c8; --line:#2b3a4d; --blue:#72b3ff; --chip:#202e3e; --shadow:0 8px 24px rgba(0,0,0,.18); }
-    * { box-sizing:border-box; }
-    html { scroll-behavior:smooth; }
-    body { margin:0; color:var(--text); background:var(--bg); font:14px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",Arial,sans-serif; }
-    a { color:var(--blue); text-decoration:none; }
-    a:hover { text-decoration:underline; }
-    .topbar { height:54px; position:sticky; top:0; z-index:10; display:flex; align-items:center; justify-content:space-between; padding:0 30px; border-bottom:1px solid var(--line); background:color-mix(in srgb,var(--card) 92%,transparent); backdrop-filter:blur(10px); }
-    .brand { font-size:16px; font-weight:700; letter-spacing:-.2px; color:var(--text); }
-    nav { display:flex; gap:25px; align-items:center; }
-    nav a { color:var(--muted); font-size:14px; white-space:nowrap; }
-    .theme { width:40px; height:40px; border:1px solid var(--line); background:var(--card); color:var(--text); border-radius:8px; cursor:pointer; font-size:18px; }
-    .layout { display:grid; grid-template-columns:278px minmax(0,1fr); gap:30px; max-width:1280px; margin:22px auto; padding:0 18px; }
-    aside { position:sticky; top:76px; height:calc(100vh - 96px); overflow:auto; padding-right:7px; scrollbar-color:#8e969e transparent; }
-    .profile { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:27px 20px; box-shadow:var(--shadow); text-align:center; }
-    .avatar { width:140px; height:140px; object-fit:cover; border-radius:50%; border:7px solid #eef3f8; box-shadow:0 0 0 1px var(--line); }
-    h1 { font-size:20px; margin:16px 0 0; line-height:1.3; }
-    .cn-name { margin:1px 0 5px; font-size:14px; }
-    .role { color:var(--muted); margin:0 0 19px; }
-    .details { text-align:left; color:var(--muted); display:grid; gap:8px; font-size:13px; }
-    .details span { display:flex; gap:9px; align-items:center; }
-    .socials { display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin:20px 0; }
-    .socials a { display:grid; place-items:center; width:34px; height:34px; color:var(--muted); border:1px solid var(--line); border-radius:50%; font-weight:700; font-size:13px; }
-    .side-block { border-top:1px solid var(--line); padding-top:20px; margin-top:20px; text-align:left; }
-    .side-title { margin:0 0 11px; font-size:12px; font-weight:700; }
-    .tags { display:flex; flex-wrap:wrap; gap:8px; }
-    .tag { padding:4px 10px; border:1px solid var(--line); border-radius:18px; color:var(--muted); background:var(--chip); font-size:12px; }
-    .recent { margin:0; padding:0; list-style:none; display:grid; gap:12px; font-size:12px; }
-    .recent time { display:block; color:var(--blue); font-weight:700; }
-    main { min-width:0; }
-    section { scroll-margin-top:72px; padding:5px 0 23px; }
-    .section-title { display:flex; align-items:center; gap:10px; margin:0 0 16px; padding-bottom:8px; border-bottom:1px solid var(--line); font-size:20px; }
-    .icon { display:inline-grid; place-items:center; width:25px; height:25px; font-size:15px; background:var(--chip); border:1px solid var(--line); border-radius:6px; }
-    .bio { font-size:15px; color:var(--text); }
-    .bio p { margin:0 0 14px; }
-    .news-box { height:258px; overflow:auto; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
-    .news-item { display:grid; grid-template-columns:88px 28px minmax(340px,1fr) 24px; gap:3px; align-items:center; min-width:640px; padding:8px 2px; border-bottom:1px solid var(--line); }
-    .news-item time { color:var(--blue); font-weight:700; }
-    .news-item .out { text-align:right; color:#91a0b1; font-size:16px; }
-    .pub { display:grid; grid-template-columns:94px 1fr; gap:16px; padding:16px 0; border-bottom:1px solid var(--line); }
-    .pub-year { color:var(--blue); font-size:16px; font-weight:700; }
-    .pub h3 { margin:0 0 3px; font-size:16px; line-height:1.4; }
-    .pub p { margin:0; color:var(--muted); }
-    .badge { display:inline-block; margin:7px 6px 0 0; padding:2px 8px; border-radius:10px; background:#eaf3ff; color:var(--blue); font-size:12px; font-weight:600; }
-    footer { color:var(--muted); font-size:12px; padding:13px 0 30px; }
-    @media (max-width:850px) { .topbar { padding:0 18px; } nav { display:none; } .layout { display:block; margin-top:16px; } aside { position:static; height:auto; overflow:visible; padding:0; margin-bottom:22px; } .profile { max-width:none; } .details { max-width:350px; margin:auto; } .side-block { display:none; } .avatar { width:112px; height:112px; } }
-    @media (max-width:480px) { .layout { padding:0 12px; } .topbar { height:50px; } .bio { font-size:14px; } .section-title { font-size:18px; } .pub { grid-template-columns:1fr; gap:3px; } }
-  </style>
-</head>
-<body>
-  <header class="topbar">
-    <!-- 替换为你的姓名 -->
-    <a class="brand" href="#about">张业东</a>
-    <nav aria-label="主导航">
-      <a href="#about">关于我</a><a href="#news">动态</a><a href="#publications">论文</a><a href="#education">教育</a><a href="#experience">经历</a><a href="#honors">荣誉</a><a href="#service">服务</a><a href="#projects">项目</a>
-    </nav>
-    <button class="theme" type="button" aria-label="切换深色模式" title="切换深色模式">◐</button>
-  </header>
+# ============================================================
+#  站点配置
+#  只需要改下面 ★ 标记的几处，其他地方保持默认即可
+# ============================================================
 
-  <div class="layout">
-    <aside>
-      <div class="profile">
-        <!-- 将 src 换成你的头像文件，例如 assets/avatar.jpg -->
-        <img class="avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=320&q=85" alt="你的名字的头像" />
-        <h1>你的名字</h1><p class="cn-name">Your Name</p>
-        <p class="role">研究方向 / 职位 / 所在机构</p>
-        <div class="details"><span>📍 Hangzhou, China</span><span>✉️ <a href="mailto:your-email@example.com">your-email@example.com</a></span></div>
-        <div class="socials" aria-label="社交链接">
-          <a href="#" title="Email">✉</a><a href="#" title="Google Scholar">G</a><a href="#" title="LinkedIn">in</a><a href="#" title="GitHub">⌘</a><a href="#" title="知乎">知</a><a href="#" title="X">𝕏</a>
-        </div>
-        <div class="side-block"><p class="side-title">RESEARCH FOCUS</p><div class="tags"><span class="tag">Artificial Intelligence</span><span class="tag">Multimodal Learning</span><span class="tag">Computer Vision</span></div></div>
-        <div class="side-block"><p class="side-title">RECENT NEWS</p><ul class="recent"><li><time>2026.08</time>一篇论文被国际会议接收。</li><li><time>2026.06</time>发布了新的开源项目。</li></ul></div>
-      </div>
-    </aside>
+# ★ 改这里：换成你自己的 GitHub 用户名（小写）
+# 例如 GitHub 地址是 github.com/zhangsan，这里就填 https://zhangsan.github.io/
+baseURL = 'https://yourname.github.io/'
 
-    <main>
-      <section id="about"><h2 class="section-title"><span class="icon">🪪</span>关于我</h2><div class="bio">
-        <p>你好！我是<strong>你的名字</strong>，目前在<a href="#">你的机构</a>担任你的职位。欢迎来到我的个人主页。</p>
-        <p>我于 20XX 年获得<a href="#">你的学校</a>的博士学位，导师为<a href="#">导师姓名</a>。此前，我在你的学校完成了本科或硕士学习。</p>
-        <p>我的研究兴趣主要集中在<strong>人工智能、多模态学习、计算机视觉与自然语言处理</strong>。我也很乐意与有共同兴趣的朋友交流合作，欢迎通过邮件联系我。</p>
-      </div></section>
+languageCode = 'zh-cn'
+defaultContentLanguage = 'zh'
+defaultContentLanguageInSubdir = false
 
-      <section id="news"><h2 class="section-title"><span class="icon">📰</span>动态</h2><div class="news-box">
-        <div class="news-item"><time>2026.08</time><span>📑</span><span>论文 <strong>Project Name</strong> 被 EMNLP 2026 接收！</span><a class="out" href="#">↗</a></div>
-        <div class="news-item"><time>2026.07</time><span>🏅</span><span>我们的项目获得了开源社区推荐。</span><a class="out" href="#">↗</a></div>
-        <div class="news-item"><time>2026.06</time><span>🎤</span><span>在某某学术会议分享最新研究工作。</span><a class="out" href="#">↗</a></div>
-        <div class="news-item"><time>2026.05</time><span>📑</span><span>论文 <strong>Another Project</strong> 被 ICML 2026 接收！</span><a class="out" href="#">↗</a></div>
-        <div class="news-item"><time>2025.12</time><span>✈️</span><span>加入你的新团队，开启新的研究旅程。</span><a class="out" href="#">↗</a></div>
-        <div class="news-item"><time>2025.10</time><span>📑</span><span>论文被 NeurIPS 2025 接收。</span><a class="out" href="#">↗</a></div>
-      </div></section>
+# ★ 改这里：网站标题，显示在浏览器标签和页面顶部
+title = '我的博客'
 
-      <section id="publications"><h2 class="section-title"><span class="icon">📚</span>论文发表</h2>
-        <article class="pub"><div class="pub-year">2026</div><div><h3>论文标题：你的研究成果名称</h3><p><strong>你的名字</strong>, 合作者姓名, 导师姓名. <em>Conference / Journal Name</em>, 2026.</p><a class="badge" href="#">Paper</a><a class="badge" href="#">Code</a><a class="badge" href="#">Project</a></div></article>
-        <article class="pub"><div class="pub-year">2025</div><div><h3>另一篇论文的标题</h3><p>作者姓名. <em>Conference / Journal Name</em>, 2025.</p><a class="badge" href="#">Paper</a><a class="badge" href="#">Code</a></div></article>
-      </section>
-      <section id="education"><h2 class="section-title"><span class="icon">🎓</span>教育经历</h2><div class="bio"><p><strong>20XX – 20XX</strong>　博士，学校名称，专业名称</p><p><strong>20XX – 20XX</strong>　本科/硕士，学校名称，专业名称</p></div></section>
-      <section id="experience"><h2 class="section-title"><span class="icon">💼</span>工作经历</h2><div class="bio"><p><strong>20XX – 至今</strong>　职位名称，机构名称</p></div></section>
-      <section id="honors"><h2 class="section-title"><span class="icon">🏆</span>荣誉奖项</h2><div class="bio"><p>20XX　奖项名称</p></div></section>
-      <section id="service"><h2 class="section-title"><span class="icon">🤝</span>学术服务</h2><div class="bio"><p>期刊/会议审稿人、社区服务等。</p></div></section>
-      <section id="projects"><h2 class="section-title"><span class="icon">🚀</span>项目</h2><div class="bio"><p><a href="#">项目名称</a>：用一句话介绍这个项目的目标与亮点。</p></div></section>
-      <footer>© <span id="year"></span> 你的名字 · Built with GitHub Pages</footer>
-    </main>
-  </div>
-  <script>
-    const button = document.querySelector('.theme');
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark') document.documentElement.dataset.theme = 'dark';
-    button.addEventListener('click', () => { const dark = document.documentElement.dataset.theme !== 'dark'; document.documentElement.dataset.theme = dark ? 'dark' : ''; localStorage.setItem('theme', dark ? 'dark' : 'light'); });
-    document.querySelector('#year').textContent = new Date().getFullYear();
-  </script>
-</body>
-</html>
+theme = 'PaperMod'
+
+# 中文必须开启，否则字数、阅读时间、摘要会算错
+hasCJKLanguage = true
+
+enableRobotsTXT = true
+paginate = 8
+summaryLength = 140
+
+# 文章永久链接：域名/posts/文章名/
+[permalinks]
+  posts = '/posts/:slug/'
+
+[taxonomies]
+  tag = 'tags'
+  category = 'categories'
+
+[params]
+  # ★ 改这里：一句话简介，出现在分享卡片和 RSS 里
+  description = '记录一些想法、笔记和生活。'
+  keywords = ['博客', 'Hugo', '个人网站']
+
+  # 自动跟随系统深浅色，也可改成 'light' 或 'dark' 固定
+  defaultTheme = 'auto'
+  disableThemeToggle = false
+
+  # 文章页显示项
+  ShowReadingTime = true
+  ShowWordCount = true
+  ShowLastMod = true
+  ShowPostNavLinks = true
+  ShowBreadCrumbs = true
+  ShowToc = true
+  TocOpen = true
+  ShowCodeCopyButtons = true
+  ShowShareButtons = true
+
+  # 列表页与首页
+  hideMeta = false
+  ShowRssButtonInSectionTermList = true
+
+  # favicon 放在 static/ 目录下
+  [params.assets]
+    favicon = '/favicon.svg'
+
+  # ★ 改这里：换成你自己的链接，图标显示在页面顶部
+  # 更多图标名见 https://github.com/adityatelange/hugo-PaperMod/wiki/Icons
+  [[params.socialIcons]]
+    name = 'github'
+    url = 'https://github.com/你的用户名'
+  [[params.socialIcons]]
+    name = 'mail'
+    url = 'mailto:你的邮箱@example.com'
+
+# 顶部导航栏
+[menu]
+  [[menu.main]]
+    identifier = 'posts'
+    name = '文章'
+    url = '/posts/'
+    weight = 10
+  [[menu.main]]
+    identifier = 'tags'
+    name = '标签'
+    url = '/tags/'
+    weight = 20
+  [[menu.main]]
+    identifier = 'archives'
+    name = '归档'
+    url = '/archives/'
+    weight = 30
+  [[menu.main]]
+    identifier = 'search'
+    name = '搜索'
+    url = '/search/'
+    weight = 40
+  [[menu.main]]
+    identifier = 'about'
+    name = '关于'
+    url = '/about/'
+    weight = 50
+
+# 首页同时生成 RSS 和搜索索引
+[outputs]
+  home = ['HTML', 'RSS', 'JSON']
+
+[markup]
+  [markup.goldmark]
+    [markup.goldmark.renderer]
+      unsafe = true
+  [markup.highlight]
+    noClasses = false
+    style = 'github'
+  [markup.tableOfContents]
+    startLevel = 2
+    endLevel = 3
